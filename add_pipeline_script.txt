@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+    stages {
+        stage ('Checkout Code') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/gouthamchilakala/PetClinic.git']]])
+            }
+        }
+        stage ( 'Compile') {
+            steps {
+                sh '/opt/apache-maven-3.5.3/bin/mvn compile'
+            }
+        }
+        stage ( ' Test Cases') {
+            steps {
+                sh '/opt/apache-maven-3.5.3/bin/mvn test'
+            }
+        }
+        stage ( ' Package' ) {
+            steps {
+                sh '/opt/apache-maven-3.5.3/bin/mvn package'
+            }
+        }
+    }
+}
+
+ stage('Smoke Test'){
+        sleep 5
+        sh "curl http://ec2-3-85-15-36.compute-1.amazonaws.com:8080/"
+        sh "curl ec2-52-70-39-48.compute-1.amazonaws.com:8080/petclinic"
+    }
+	
+	stage('Deploy Tomcat'){
+        sh 'curl -u tomcat:tomcat -T **/*.war "http://ec2-3-85-15-36.compute-1.amazonaws.com:8080/manager/text/deploy?path=/&update=true"'
+    stage('Deploy To Tomcat'){
+        sshagent(['app-server']) {
+            sh 'scp -o StrictHostKeyChecking=no target/*.war ec2-user@ec2-52-70-39-48.compute-1.amazonaws.com:/opt/apache-tomcat-8.5.38/webapps/'
+        }
+		
+		
+_________________________________________________________________
+
+
+pipeline { 
+  
+   agent any
+
+   stages {
+   
+     stage('Install Dependencies') { 
+        steps { 
+           sh 'npm install' 
+        }
+     }
+     
+     stage('Test') { 
+        steps { 
+           sh 'echo "testing application..."'
+        }
+      }
+
+         stage("Deploy application") { 
+         steps { 
+           sh 'echo "deploying application..."'
+         }
+
+     }
+  
+   	}
+
+   }
